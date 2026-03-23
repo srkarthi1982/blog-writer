@@ -1,7 +1,8 @@
 import { postWebhook } from "./webhook";
+import { APP_KEY } from "../app.meta";
 
 type ParentNotificationPayload = {
-  appKey: "app-starter";
+  appKey?: string;
   userId: string;
   title: string;
   message: string;
@@ -24,7 +25,7 @@ export const notifyParent = async (payload: ParentNotificationPayload): Promise<
 
     const url = resolveNotificationUrl(baseUrl, overrideUrl);
     const body = {
-      appKey: payload.appKey,
+      appKey: payload.appKey ?? APP_KEY,
       userId: payload.userId,
       title: payload.title,
       message: payload.message,
@@ -36,7 +37,7 @@ export const notifyParent = async (payload: ParentNotificationPayload): Promise<
       url,
       secret,
       payload: body,
-      appKey: payload.appKey,
+      appKey: body.appKey,
     });
   } catch (error) {
     if (import.meta.env.DEV) {

@@ -1,4 +1,3 @@
-// starter/src/lib/auth.ts
 import { createHmac } from "node:crypto";
 
 // Same secret as parent app

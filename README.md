@@ -1,8 +1,8 @@
 # Blog Writer
 
-Draft SEO-friendly blog posts. This repo is seeded from the latest Ansiversa mini-app starter baseline.
+Draft SEO-friendly blog posts. This repo powers Blog Writer inside the Ansiversa ecosystem and follows the current shared mini-app contract.
 
-## Current baseline
+## Current app structure
 
 - Public landing page on `/`
 - Protected app entry on `/app`
@@ -20,5 +20,5 @@ npm run build
 ## Notes
 
 - Update `src/app.meta.ts` only if the app registry identity changes.
-- Keep middleware, layout, and shared component patterns aligned with `app-starter`.
+- Keep middleware, layout, and shared component patterns aligned with the current Ansiversa mini-app contract.
 - Update `AGENTS.md` after every completed task.
