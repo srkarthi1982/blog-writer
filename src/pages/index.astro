@@ -1,92 +1,139 @@
 ---
+import { AvButton, AvCard, AvContainer } from "@ansiversa/components";
 import AppShell from "../layouts/AppShell.astro";
-import { AvContainer, AvButton } from "@ansiversa/components";
+import { APP_META } from "../app.meta";
+import { buildRootRedirect } from "../lib/redirects";
 
-const title = "Blog Writer – Ansiversa";
-const description = "Draft SEO-friendly blog posts.";
+const rootAppUrl = Astro.locals.rootAppUrl ?? "https://ansiversa.com";
+const appUrl = new URL("/app", Astro.url).toString();
+const startHref = Astro.locals.isAuthenticated
+  ? "/app"
+  : buildRootRedirect(rootAppUrl, "/login", appUrl);
+const signInHref = buildRootRedirect(rootAppUrl, "/login", appUrl);
+
+const title = `${APP_META.name} | Ansiversa`;
+const description = APP_META.description;
+
+const valueCards = [
+  {
+    "title": "Stronger starting points",
+    "description": "The product baseline is designed to help future writing flows begin with direction instead of a blank, intimidating surface."
+  },
+  {
+    "title": "Polish without noise",
+    "description": "A calm shell and structured sections make room for better phrasing, better rhythm, and better final output."
+  },
+  {
+    "title": "Ready for focused creation",
+    "description": "Shared Ansiversa patterns are already in place so the real writing workflow can be added on a stable production foundation."
+  }
+];
+const reasonsToUse = [
+  {
+    "title": "One clear job",
+    "description": "Blog Writer stays anchored to a single purpose so the future product can remain focused instead of sprawling."
+  },
+  {
+    "title": "Shared Ansiversa standards",
+    "description": "The landing page, protected workspace, navbar, footer, and parent-auth routing already follow the current ecosystem baseline."
+  },
+  {
+    "title": "Ready for the next implementation phase",
+    "description": "This repo is seeded for future DB, action, and UI work without needing another starter cleanup pass first."
+  }
+];
 ---
 
 <AppShell title={title} description={description}>
-  <!-- Hero -->
-  <section class="av-hero">
-    <AvContainer size="narrow" className="av-hero__content--narrow">
-      <div class="av-hero__content">
-        <div class="av-kicker">
-          <span>Writing & Content · Ansiversa Mini App</span>
+  <section class="av-section">
+    <AvContainer>
+      <div class="av-auth-stack-lg">
+        <AvCard className="av-auth-card">
+          <div class="av-auth-stack-md">
+            <div class="av-auth-stack-xs">
+              <p class="av-kicker">Writing Mini-App</p>
+              <h1 class="av-section-title">Blog Writer is being prepared to turn rough ideas into cleaner, stronger writing momentum</h1>
+              <p class="av-text-soft">
+                Draft SEO-friendly blog posts. Built for creativity, speed, and polish, Blog Writer is being seeded on the
+                latest Ansiversa mini-app baseline so the first real release can start from a
+                premium, production-ready foundation.
+              </p>
+            </div>
+
+            <div class="av-row-wrap">
+              <AvButton href={startHref}>Open Blog Writer</AvButton>
+              <AvButton href={signInHref} variant="ghost">Sign in</AvButton>
+            </div>
+
+            <p class="av-text-soft">
+              Coming soon in Writing and Creativity. The shared shell, route structure, and starter
+              contracts are already in place.
+            </p>
+          </div>
+        </AvCard>
+
+        <div class="grid gap-4 md:grid-cols-3">
+          {valueCards.map((card) => (
+            <AvCard variant="soft" className="av-auth-stack-sm">
+              <h2 class="av-card-heading">{card.title}</h2>
+              <p class="av-text-soft">{card.description}</p>
+            </AvCard>
+          ))}
         </div>
-        <h1 class="av-gradient-text">Blog Writer</h1>
-        <p>
-          Draft SEO-friendly blog posts.
-        </p>
-      </div>
-      <div class="av-cta-row">
-        <AvButton href="https://blog-writer.ansiversa.com">Launch Blog</AvButton>
-      </div>
-    </AvContainer>
-  </section>
 
-  <!-- Problem -->
-  <section class="av-section">
-    <AvContainer size="narrow">
-      <div class="av-section-header">
-        <h2 class="av-section-title">The problem it solves</h2>
-        <p class="av-section-lead">
-          Blank pages and inconsistent ideas slow down your writing.
-        </p>
-      </div>
-      <div class="av-section-body space-y-3 text-slate-300">
-        <p>Blog Writer gives you guided structure so you can write faster and better.</p>
-      </div>
-    </AvContainer>
-  </section>
+        <div class="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
+          <AvCard variant="soft" className="av-auth-stack-sm">
+            <p class="av-kicker">What this app will do</p>
+            <h2 class="av-card-heading">Blog Writer</h2>
+            <p class="av-text-soft">
+              Blog Writer is a focused writing tool inside Ansiversa. Its first release is being shaped around one creative job: Draft SEO-friendly blog posts.
+            </p>
+            <p class="av-text-soft">
+              The development-ready baseline already follows Ansiversa layout, auth, metadata, and
+              route standards, so the next build phase can stay tightly scoped to the real domain workflow.
+            </p>
+          </AvCard>
 
-  <!-- Why this mini app -->
-  <section class="av-section">
-    <AvContainer size="narrow">
-      <div class="av-section-header">
-        <h2 class="av-section-title">Why Blog Writer feels different</h2>
-        <p class="av-section-lead">
-          A focused mini app inside the larger Ansiversa ecosystem.
-        </p>
-      </div>
-      <div class="av-section-body">
-        <ul class="space-y-2 text-slate-300 list-disc list-inside">
-          <li>Built for creators, marketers, and writers of all levels.</li>
-          <li>Turns rough ideas into clear, well-structured content.</li>
-          <li>Lets you reuse and adapt your best writing patterns.</li>
-        </ul>
-      </div>
-    </AvContainer>
-  </section>
+          <AvCard className="av-auth-card">
+            <div class="av-auth-stack-sm">
+              <p class="av-kicker">Category fit</p>
+              <h2 class="av-card-heading">Writing and Creativity</h2>
+              <p class="av-text-soft">
+                Blog Writer is being positioned with a creativity, speed, and polish tone so it feels consistent with the
+                rest of the Ansiversa ecosystem from the first load.
+              </p>
+            </div>
+          </AvCard>
+        </div>
 
-  <!-- How it works -->
-  <section class="av-section">
-    <AvContainer size="narrow">
-      <div class="av-section-header">
-        <h2 class="av-section-title">How it works</h2>
-        <p class="av-section-lead">
-          Simple, clear steps so people can start in under a minute.
-        </p>
-      </div>
-      <ol class="av-section-body space-y-2 text-slate-300 list-decimal list-inside">
-        <li>Open Blog Writer when you’re ready to write.</li>
-        <li>Choose the type of piece or style you want.</li>
-        <li>Refine the generated ideas or text until it fits your voice.</li>
-      </ol>
-    </AvContainer>
-  </section>
+        <div class="grid gap-4 md:grid-cols-3">
+          {reasonsToUse.map((reason) => (
+            <AvCard variant="soft" className="av-auth-stack-sm">
+              <p class="av-kicker">Why use it</p>
+              <h2 class="av-card-heading">{reason.title}</h2>
+              <p class="av-text-soft">{reason.description}</p>
+            </AvCard>
+          ))}
+        </div>
 
-  <!-- Final CTA -->
-  <section class="av-section">
-    <AvContainer size="narrow">
-      <div class="av-section-header">
-        <h2 class="av-section-title">Ready to try Blog Writer?</h2>
-        <p class="av-section-lead">
-          Open the app, follow the simple flow, and let it handle the heavy lifting.
-        </p>
-      </div>
-      <div class="av-cta-row">
-        <AvButton href="https://blog-writer.ansiversa.com">Start with Blog</AvButton>
+        <AvCard className="av-auth-card">
+          <div class="av-auth-stack-md">
+            <div class="av-auth-stack-xs">
+              <p class="av-kicker">Build in progress</p>
+              <h2 class="av-section-title">The premium baseline is locked. The domain workflow is next.</h2>
+              <p class="av-text-soft">
+                This seeded version of Blog Writer is aligned to the latest app-starter
+                contract, uses the shared Ansiversa shell, and is ready for future implementation
+                without another starter cleanup pass.
+              </p>
+            </div>
+
+            <div class="av-row-wrap">
+              <AvButton href={startHref}>Enter protected workspace</AvButton>
+              <AvButton href={signInHref} variant="ghost">Return through Ansiversa</AvButton>
+            </div>
+          </div>
+        </AvCard>
       </div>
     </AvContainer>
   </section>
