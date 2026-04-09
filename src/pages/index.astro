@@ -1,134 +1,154 @@
 ---
-import { AvButton, AvCard, AvContainer } from "@ansiversa/components";
 import AppShell from "../layouts/AppShell.astro";
-import { APP_META } from "../app.meta";
+import LandingPageStandard from "../components/landing/LandingPageStandard.astro";
+import type { LandingPageContent } from "../lib/landing";
 import { buildRootRedirect } from "../lib/redirects";
 
 const rootAppUrl = Astro.locals.rootAppUrl ?? "https://ansiversa.com";
 const appUrl = new URL("/app", Astro.url).toString();
-const startHref = Astro.locals.isAuthenticated
-  ? "/app"
-  : buildRootRedirect(rootAppUrl, "/login", appUrl);
-const signInHref = buildRootRedirect(rootAppUrl, "/login", appUrl);
+const startHref = Astro.locals.isAuthenticated ? "/app" : buildRootRedirect(rootAppUrl, "/login", appUrl);
 
-const title = `${APP_META.name} | Ansiversa`;
-const description = APP_META.description;
-
-const valueCards = [
-  {
-    "title": "Stronger starting points",
-    "description": "The product baseline is designed to help future writing flows begin with direction instead of a blank, intimidating surface."
+const landingContent: LandingPageContent = {
+  categoryLabel: "Writing Workspace",
+  appLabel: "Authenticated DB-backed workspace",
+  title: "Keep blog drafts in one personal workspace instead of losing strong writing between revisions.",
+  subtitle:
+    "Create blog post records, refine title, summary, body, and notes over time, favorite the strongest drafts, archive older work, and return when you need a better starting point.",
+  heroBullets: [
+    "Store title, slug, category, tags, summary, body, status, and notes in one protected record",
+    "Use search and simple filters to find active, archived, or favorite drafts faster",
+    "Open a full detail page whenever the article needs focused editing instead of a short list preview",
+  ],
+  primaryCta: {
+    label: Astro.locals.isAuthenticated ? "Open Workspace" : "Sign in to Open",
+    href: startHref,
   },
-  {
-    "title": "Polish without noise",
-    "description": "A calm shell and structured sections make room for better phrasing, better rhythm, and better final output."
+  secondaryCta: {
+    label: "See Workflow",
+    href: "#workflow",
+    variant: "ghost",
   },
-  {
-    "title": "Ready for focused creation",
-    "description": "Shared Ansiversa patterns are already in place so the real writing workflow can be added on a stable production foundation."
-  }
-];
-const reasonsToUse = [
-  {
-    "title": "One clear job",
-    "description": "Blog Writer stays anchored to a single purpose so the future product can remain focused instead of sprawling."
+  heroNote:
+    "Current V1 is a manual drafting workspace. It does not write posts with AI, publish them to a website, or score SEO performance.",
+  heroPanel: {
+    eyebrow: "Draft flow",
+    title: "Capture → Refine → Revisit",
+    steps: [
+      "1. Save the post title and content in a protected record",
+      "2. Edit the draft over time, favorite strong posts, and archive older ones",
+      "3. Return later when you need a reliable starting point",
+    ],
+    meta: [
+      { value: "DB", label: "Persistence" },
+      { value: "Per-user", label: "Ownership" },
+    ],
   },
-  {
-    "title": "Shared Ansiversa standards",
-    "description": "The landing page, protected workspace, navbar, footer, and parent-auth routing already follow the current ecosystem baseline."
+  features: {
+    title: "What Blog Writer gives you in V1",
+    lead:
+      "The value is in keeping blog drafting structured and reusable, not in pretending to be a publishing CMS, AI writer, or SEO analytics product.",
+    items: [
+      {
+        title: "Structured draft records",
+        description:
+          "Keep title, slug, category, tags, summary, article body, status, and notes together in one record.",
+      },
+      {
+        title: "Searchable writing library",
+        description:
+          "Search title, summary, content, tags, and notes so older writing is easier to reopen and reuse.",
+      },
+      {
+        title: "Favorite and archive states",
+        description:
+          "Mark strong drafts worth revisiting and move inactive writing out of the active view without deleting it.",
+      },
+      {
+        title: "Full detail editing",
+        description:
+          "Open a dedicated detail route whenever a post needs full-body editing instead of just workspace scanning.",
+      },
+    ],
   },
-  {
-    "title": "Ready for the next implementation phase",
-    "description": "Blog Writer is already aligned to the current Ansiversa app contract, so the next build phase can stay focused on real product work."
-  }
-];
+  pillars: {
+    title: "Why this works better than scattered writing docs",
+    lead:
+      "The product stays intentionally narrow: one personal draft library that helps keep writing organized, editable, and easy to revisit without turning into a publishing platform.",
+    items: [
+      {
+        title: "Truthful product boundary",
+        description:
+          "This is a manual blog drafting and organization workspace, not an AI writer, CMS, SEO platform, or team editorial tool.",
+      },
+      {
+        title: "Protected personal ownership",
+        description:
+          "Protected routes and owner-scoped records keep each user’s writing library separate and safe to revise over time.",
+      },
+      {
+        title: "Drafts worth reusing",
+        description:
+          "Favorites, archive controls, and search make it easier to return to older posts when a new article needs a better base.",
+      },
+      {
+        title: "Safe state changes",
+        description:
+          "Create, update, favorite, archive, and restore flows stay predictable without hard-delete risk in V1.",
+      },
+    ],
+  },
+  workflow: {
+    eyebrow: "How it works",
+    title: "Build a blog draft library you can keep refining",
+    lead:
+      "The workflow is built around capturing useful writing once, improving it when needed, and keeping the workspace clear over time.",
+    steps: [
+      {
+        title: "Sign in and create a draft",
+        description:
+          "Open the protected workspace and save the title, content, and context fields for the post you want to keep working on.",
+      },
+      {
+        title: "Refine the article in detail",
+        description:
+          "Use the detail page to revise summary, content, tags, notes, and status whenever the draft needs another pass.",
+      },
+      {
+        title: "Favorite, archive, and reopen later",
+        description:
+          "Keep strong drafts easy to find and move older work out of the default view without losing it.",
+      },
+    ],
+  },
+  showcase: {
+    eyebrow: "Current product shape",
+    title: "Built for structured draft storage and revision, not website publishing",
+    description:
+      "The landing stays aligned to the V1 scope: Blog Writer is a protected personal workspace for saving, editing, favoriting, archiving, and revisiting blog post drafts.",
+    bullets: [
+      "Good fit for solo writers, founders, marketers, and creators preparing content before publishing elsewhere",
+      "Centered on manual drafting, safe organization, and dependable retrieval",
+    ],
+    calloutLabel: "Freeze truth",
+    calloutValue: "Manual drafting workspace",
+  },
+  finalCta: {
+    title: "Start building a draft library you can actually revisit",
+    description:
+      "Open the workspace, save the writing worth keeping, and make the next article easier to start from stronger material.",
+    primaryCta: {
+      label: Astro.locals.isAuthenticated ? "Open Workspace" : "Sign in to Open",
+      href: startHref,
+    },
+    secondaryCta: {
+      label: "Review Features",
+      href: "#features",
+      variant: "ghost",
+    },
+  },
+};
 ---
 
-<AppShell title={title} description={description}>
-  <section class="av-section">
-    <AvContainer>
-      <div class="av-auth-stack-lg">
-        <AvCard className="av-auth-card">
-          <div class="av-auth-stack-md">
-            <div class="av-auth-stack-xs">
-              <p class="av-kicker">Writing Mini-App</p>
-              <h1 class="av-section-title">Blog Writer is being prepared to turn rough ideas into cleaner, stronger writing momentum</h1>
-              <p class="av-text-soft">
-                Draft SEO-friendly blog posts. Built for creativity, speed, and polish, Blog Writer is taking shape as a focused Ansiversa experience with a calm interface, clear direction, and room for the real workflow to grow well.
-              </p>
-            </div>
-
-            <div class="av-row-wrap">
-              <AvButton href={startHref}>Open Blog Writer</AvButton>
-              <AvButton href={signInHref} variant="ghost">Sign in</AvButton>
-            </div>
-
-            <p class="av-text-soft">
-              Coming soon in Writing and Creativity. The shared shell, route structure, and parent-auth flow are already in place.
-            </p>
-          </div>
-        </AvCard>
-
-        <div class="grid gap-4 md:grid-cols-3">
-          {valueCards.map((card) => (
-            <AvCard variant="soft" className="av-auth-stack-sm">
-              <h2 class="av-card-heading">{card.title}</h2>
-              <p class="av-text-soft">{card.description}</p>
-            </AvCard>
-          ))}
-        </div>
-
-        <div class="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
-          <AvCard variant="soft" className="av-auth-stack-sm">
-            <p class="av-kicker">What this app will do</p>
-            <h2 class="av-card-heading">Blog Writer</h2>
-            <p class="av-text-soft">
-              Blog Writer is a focused writing tool inside Ansiversa. Its first release is being shaped around one creative job: Draft SEO-friendly blog posts.
-            </p>
-            <p class="av-text-soft">
-              The repo already follows Ansiversa layout, auth, metadata, and route standards, so the next build phase can stay tightly scoped to the actual product workflow.
-            </p>
-          </AvCard>
-
-          <AvCard className="av-auth-card">
-            <div class="av-auth-stack-sm">
-              <p class="av-kicker">Category fit</p>
-              <h2 class="av-card-heading">Writing and Creativity</h2>
-              <p class="av-text-soft">
-                Blog Writer is being positioned with a creativity, speed, and polish tone so it feels consistent with the
-                rest of the Ansiversa ecosystem from the first load.
-              </p>
-            </div>
-          </AvCard>
-        </div>
-
-        <div class="grid gap-4 md:grid-cols-3">
-          {reasonsToUse.map((reason) => (
-            <AvCard variant="soft" className="av-auth-stack-sm">
-              <p class="av-kicker">Why use it</p>
-              <h2 class="av-card-heading">{reason.title}</h2>
-              <p class="av-text-soft">{reason.description}</p>
-            </AvCard>
-          ))}
-        </div>
-
-        <AvCard className="av-auth-card">
-          <div class="av-auth-stack-md">
-            <div class="av-auth-stack-xs">
-              <p class="av-kicker">Build in progress</p>
-              <h2 class="av-section-title">The premium baseline is locked. The domain workflow is next.</h2>
-              <p class="av-text-soft">
-                Blog Writer already uses the shared Ansiversa shell and route conventions, so future implementation can move directly into the real product flow without another structural reset.
-              </p>
-            </div>
-
-            <div class="av-row-wrap">
-              <AvButton href={startHref}>Enter protected workspace</AvButton>
-              <AvButton href={signInHref} variant="ghost">Return through Ansiversa</AvButton>
-            </div>
-          </div>
-        </AvCard>
-      </div>
-    </AvContainer>
-  </section>
+<AppShell title="Blog Writer — Ansiversa" description="A protected personal workspace for drafting and organizing blog post records.">
+  <LandingPageStandard content={landingContent} />
 </AppShell>

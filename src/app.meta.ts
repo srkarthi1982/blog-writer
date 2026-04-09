@@ -1,7 +1,7 @@
 export const APP_META = {
   key: "blog-writer",
   name: "Blog Writer",
-  description: "Draft SEO-friendly blog posts.",
+  description: "Protected workspace for drafting and organizing blog post records.",
 } as const;
 
 export const APP_KEY = APP_META.key;

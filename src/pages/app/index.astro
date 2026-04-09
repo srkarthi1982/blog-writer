@@ -1,48 +1,235 @@
 ---
-import { AvButton, AvCard, AvContainer } from "@ansiversa/components";
 import AppShell from "../../layouts/AppShell.astro";
-import { APP_META } from "../../app.meta";
+import { AvButton, AvCard, AvContainer } from "@ansiversa/components";
+import {
+  BLOG_POST_STATUSES,
+  archiveBlogPostForUser,
+  createBlogPostForUser,
+  listBlogPostsForUser,
+  listCategoriesForUser,
+  parseBlogPostInput,
+  restoreBlogPostForUser,
+  summarizeBlogPostsForUser,
+  toggleBlogPostFavoriteForUser,
+} from "../../lib/blogPosts";
 
-const title = `${APP_META.name} App`;
-const description = `Protected workspace for ${APP_META.name}.`;
+const user = Astro.locals.user;
+if (!user) return Astro.redirect("/");
 
-const checkpoints = [
-  "The public landing page is aligned to the current Ansiversa product standard.",
-  "Authenticated entry stays on /app so future workflows follow the shared ecosystem pattern.",
-  "Shared metadata, middleware, layout, and component dependencies are already synced for the next build phase.",
-];
+const searchParams = Astro.url.searchParams;
+const filters = {
+  search: searchParams.get("search") ?? "",
+  status: (searchParams.get("status") ?? "") as "" | (typeof BLOG_POST_STATUSES)[number],
+  category: searchParams.get("category") ?? "",
+  favoriteOnly: searchParams.get("favorites") === "true",
+  archived: searchParams.get("archived") === "true",
+};
+
+let formError = "";
+let createValues = {
+  title: "",
+  slug: "",
+  category: "",
+  tags: "",
+  summary: "",
+  content: "",
+  status: "draft",
+  notes: "",
+};
+
+if (Astro.request.method === "POST") {
+  const formData = await Astro.request.formData();
+  const intent = String(formData.get("intent") ?? "");
+  const idRaw = String(formData.get("id") ?? "");
+
+  try {
+    if (intent === "create") {
+      createValues = {
+        title: String(formData.get("title") ?? ""),
+        slug: String(formData.get("slug") ?? ""),
+        category: String(formData.get("category") ?? ""),
+        tags: String(formData.get("tags") ?? ""),
+        summary: String(formData.get("summary") ?? ""),
+        content: String(formData.get("content") ?? ""),
+        status: String(formData.get("status") ?? "draft"),
+        notes: String(formData.get("notes") ?? ""),
+      };
+
+      return Astro.redirect(
+        `/app/posts/${
+          (
+            await createBlogPostForUser(
+              user.id,
+              parseBlogPostInput({
+                title: formData.get("title"),
+                slug: formData.get("slug"),
+                category: formData.get("category"),
+                tags: formData.get("tags"),
+                summary: formData.get("summary"),
+                content: formData.get("content"),
+                status: formData.get("status"),
+                notes: formData.get("notes"),
+              }),
+            )
+          ).id
+        }`,
+      );
+    }
+
+    const id = Number.parseInt(idRaw, 10);
+    if (!Number.isFinite(id)) {
+      return Astro.redirect("/app");
+    }
+
+    if (intent === "toggleFavorite") {
+      await toggleBlogPostFavoriteForUser(user.id, id);
+      return Astro.redirect("/app");
+    }
+
+    if (intent === "archive") {
+      await archiveBlogPostForUser(user.id, id);
+      return Astro.redirect("/app");
+    }
+
+    if (intent === "restore") {
+      await restoreBlogPostForUser(user.id, id);
+      return Astro.redirect("/app");
+    }
+  } catch (error) {
+    formError = error instanceof Error ? error.message : "Unable to save blog post.";
+  }
+}
+
+const blogPosts = await listBlogPostsForUser(user.id, filters);
+const summary = await summarizeBlogPostsForUser(user.id);
+const categories = await listCategoriesForUser(user.id);
 ---
 
-<AppShell title={title} description={description}>
-  <section class="av-section">
+<AppShell title="Blog Writer Workspace" description="Protected workspace for personal blog drafting records.">
+  <main class="py-10">
     <AvContainer>
       <div class="av-auth-stack-lg">
-        <AvCard className="av-auth-card">
-          <div class="av-auth-stack-md">
-            <div class="av-auth-stack-xs">
-              <p class="av-kicker">Protected Workspace</p>
-              <h1 class="av-section-title">{APP_META.name}</h1>
-              <p class="av-text-soft">
-                Blog Writer is ready for the next development phase. This protected route is reserved for the core app workflow that signed-in users will use as the product takes shape.
-              </p>
-            </div>
-
-            <div class="av-row-wrap">
-              <AvButton href="/">Back to landing</AvButton>
-              <AvButton href="/signout" variant="ghost">Sign out</AvButton>
-            </div>
+        <section class="flex flex-wrap items-end justify-between gap-4">
+          <div class="av-auth-stack-xs">
+            <p class="av-kicker">Protected workspace</p>
+            <h1 class="av-section-title">Your blog draft library</h1>
+            <p class="av-text-soft">
+              Create article records, revise them over time, and keep strong drafts easy to revisit without turning the app into a publishing CMS.
+            </p>
           </div>
-        </AvCard>
+          <AvButton href="#create">Create Draft</AvButton>
+        </section>
 
-        <div class="grid gap-4 md:grid-cols-3">
-          {checkpoints.map((item) => (
-            <AvCard variant="soft" className="av-auth-stack-sm">
-              <h2 class="av-card-heading">Baseline ready</h2>
-              <p class="av-text-soft">{item}</p>
-            </AvCard>
-          ))}
-        </div>
+        <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <AvCard variant="soft"><p class="av-kicker">Total</p><h2 class="av-card-heading">{summary.total}</h2></AvCard>
+          <AvCard variant="soft"><p class="av-kicker">Active</p><h2 class="av-card-heading">{summary.active}</h2></AvCard>
+          <AvCard variant="soft"><p class="av-kicker">Favorites</p><h2 class="av-card-heading">{summary.favorites}</h2></AvCard>
+          <AvCard variant="soft"><p class="av-kicker">Archived</p><h2 class="av-card-heading">{summary.archived}</h2></AvCard>
+        </section>
+
+        <section class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+          <AvCard variant="soft" className="av-auth-stack-md">
+            <div class="av-section-header">
+              <h2 class="av-section-title">Browse your drafts</h2>
+              <p class="av-section-lead">Search saved writing, filter by status or category, and keep the workspace focused on retrieval rather than publishing tools.</p>
+            </div>
+
+            <form method="GET" class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+              <input type="search" name="search" value={filters.search} placeholder="Search title, summary, content, tags" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white xl:col-span-2" />
+              <select name="status" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white">
+                <option value="">All statuses</option>
+                {BLOG_POST_STATUSES.map((status) => <option value={status} selected={filters.status === status}>{status}</option>)}
+              </select>
+              <select name="category" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white">
+                <option value="">All categories</option>
+                {categories.map((category) => <option value={category} selected={filters.category === category}>{category}</option>)}
+              </select>
+              <select name="favorites" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white">
+                <option value="false" selected={!filters.favoriteOnly}>All drafts</option>
+                <option value="true" selected={filters.favoriteOnly}>Favorites only</option>
+              </select>
+              <select name="archived" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white">
+                <option value="false" selected={!filters.archived}>Active view</option>
+                <option value="true" selected={filters.archived}>Archived view</option>
+              </select>
+              <div class="flex flex-wrap gap-2 xl:col-span-5">
+                <button class="rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-950">Apply Filters</button>
+                <a href="/app" class="rounded-lg border border-white/15 px-4 py-2 text-sm text-slate-200">Reset</a>
+              </div>
+            </form>
+
+            <div class="space-y-3">
+              {blogPosts.length ? blogPosts.map((post) => (
+                <article class="rounded-xl border border-white/10 bg-slate-950/70 p-4">
+                  <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div class="av-auth-stack-xxs">
+                      <a href={`/app/posts/${post.id}`} class="text-lg font-medium text-white hover:text-emerald-300">{post.title}</a>
+                      <p class="text-sm text-slate-400">
+                        {[post.category, post.status].filter(Boolean).join(" · ")}
+                      </p>
+                      {post.tags ? <p class="text-xs text-slate-500">Tags: {post.tags}</p> : null}
+                      <p class="text-xs text-slate-500">Updated {new Date(post.updatedAt).toLocaleDateString()}</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                      {post.isFavorite ? <span class="rounded-full border border-amber-300/30 px-2 py-1 text-xs text-amber-200">Favorite</span> : null}
+                      {post.isArchived ? <span class="rounded-full border border-white/15 px-2 py-1 text-xs text-slate-300">Archived</span> : null}
+                    </div>
+                  </div>
+                  <p class="mt-3 text-sm text-slate-300">{post.summary ?? post.content.slice(0, 180)}</p>
+                  <div class="mt-4 flex flex-wrap gap-2">
+                    <form method="POST">
+                      <input type="hidden" name="intent" value="toggleFavorite" />
+                      <input type="hidden" name="id" value={post.id} />
+                      <button type="submit" class="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-200">{post.isFavorite ? "Unfavorite" : "Favorite"}</button>
+                    </form>
+                    {!post.isArchived ? (
+                      <form method="POST">
+                        <input type="hidden" name="intent" value="archive" />
+                        <input type="hidden" name="id" value={post.id} />
+                        <button type="submit" class="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-200">Archive</button>
+                      </form>
+                    ) : (
+                      <form method="POST">
+                        <input type="hidden" name="intent" value="restore" />
+                        <input type="hidden" name="id" value={post.id} />
+                        <button type="submit" class="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-200">Restore</button>
+                      </form>
+                    )}
+                    <a href={`/app/posts/${post.id}`} class="rounded-lg border border-emerald-400/25 px-3 py-1.5 text-xs text-emerald-200">Open Detail</a>
+                  </div>
+                </article>
+              )) : (
+                <div class="rounded-xl border border-dashed border-white/15 p-8 text-center">
+                  <p class="text-white">No blog drafts match the current filters.</p>
+                  <p class="mt-2 text-sm text-slate-400">This is a personal drafting workspace. Start by creating one post record. No AI writing or publishing workflow is implied here.</p>
+                </div>
+              )}
+            </div>
+          </AvCard>
+
+          <AvCard id="create" className="av-auth-stack-md">
+            <div class="av-section-header">
+              <h2 class="av-section-title">Create a draft</h2>
+              <p class="av-section-lead">Start with the article title and body, then refine the rest of the record in detail.</p>
+            </div>
+            {formError ? <p class="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-sm text-red-200">{formError}</p> : null}
+            <form method="POST" class="av-auth-stack-sm">
+              <input type="hidden" name="intent" value="create" />
+              <input required name="title" value={createValues.title} placeholder="Title" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white" />
+              <input name="slug" value={createValues.slug} placeholder="Slug (optional)" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white" />
+              <input name="category" value={createValues.category} placeholder="Category" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white" />
+              <input name="tags" value={createValues.tags} placeholder="Tags (comma separated)" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white" />
+              <textarea name="summary" rows="3" placeholder="Summary" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white">{createValues.summary}</textarea>
+              <textarea required name="content" rows="8" placeholder="Write the blog post body" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white">{createValues.content}</textarea>
+              <select name="status" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white">
+                {BLOG_POST_STATUSES.map((status) => <option value={status} selected={createValues.status === status}>{status}</option>)}
+              </select>
+              <textarea name="notes" rows="3" placeholder="Notes" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white">{createValues.notes}</textarea>
+              <button class="rounded-lg bg-emerald-400 px-4 py-2 text-sm font-medium text-slate-950">Create draft</button>
+            </form>
+          </AvCard>
+        </section>
       </div>
     </AvContainer>
-  </section>
+  </main>
 </AppShell>

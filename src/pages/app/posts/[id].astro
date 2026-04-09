@@ -1,0 +1,156 @@
+---
+import AppShell from "../../../layouts/AppShell.astro";
+import { AvButton, AvCard, AvContainer } from "@ansiversa/components";
+import {
+  BLOG_POST_STATUSES,
+  archiveBlogPostForUser,
+  getBlogPostDetailForUser,
+  parseBlogPostInput,
+  restoreBlogPostForUser,
+  toggleBlogPostFavoriteForUser,
+  updateBlogPostForUser,
+} from "../../../lib/blogPosts";
+import { ActionError } from "astro:actions";
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect("/");
+
+const id = Number.parseInt(Astro.params.id ?? "", 10);
+if (!Number.isFinite(id)) {
+  return Astro.redirect("/app");
+}
+
+let saveError = "";
+
+if (Astro.request.method === "POST") {
+  const formData = await Astro.request.formData();
+  const intent = String(formData.get("intent") ?? "");
+
+  try {
+    if (intent === "updateRecord") {
+      await updateBlogPostForUser(
+        user.id,
+        id,
+        parseBlogPostInput({
+          title: formData.get("title"),
+          slug: formData.get("slug"),
+          category: formData.get("category"),
+          tags: formData.get("tags"),
+          summary: formData.get("summary"),
+          content: formData.get("content"),
+          status: formData.get("status"),
+          notes: formData.get("notes"),
+        }),
+      );
+      return Astro.redirect(`/app/posts/${id}`);
+    }
+
+    if (intent === "toggleFavorite") {
+      await toggleBlogPostFavoriteForUser(user.id, id);
+      return Astro.redirect(`/app/posts/${id}`);
+    }
+
+    if (intent === "archive") {
+      await archiveBlogPostForUser(user.id, id);
+      return Astro.redirect(`/app/posts/${id}`);
+    }
+
+    if (intent === "restore") {
+      await restoreBlogPostForUser(user.id, id);
+      return Astro.redirect(`/app/posts/${id}`);
+    }
+  } catch (error) {
+    if (error instanceof ActionError && error.code === "NOT_FOUND") {
+      return Astro.redirect("/app");
+    }
+    saveError = error instanceof Error ? error.message : "Unable to update this draft.";
+  }
+}
+
+let post;
+try {
+  post = await getBlogPostDetailForUser(user.id, id);
+} catch {
+  return Astro.redirect("/app");
+}
+---
+
+<AppShell title={`${post.title} — Blog Writer`} description="Blog draft detail record">
+  <main class="py-10">
+    <AvContainer>
+      <div class="av-auth-stack-lg">
+        <section class="flex flex-wrap items-end justify-between gap-4">
+          <div class="av-auth-stack-xs">
+            <p class="av-kicker">Blog post detail</p>
+            <h1 class="av-section-title">{post.title}</h1>
+            <p class="av-text-soft">
+              {[post.category, post.status].filter(Boolean).join(" · ")}
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <AvButton href="/app" variant="ghost">Back to Workspace</AvButton>
+          </div>
+        </section>
+
+        <section class="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+          <AvCard className="av-auth-stack-md">
+            <div class="av-section-header">
+              <h2 class="av-section-title">Edit post record</h2>
+              <p class="av-section-lead">Keep the article fields together here and return later as the draft evolves.</p>
+            </div>
+            {saveError ? <p class="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-sm text-red-200">{saveError}</p> : null}
+            <form method="POST" class="av-auth-stack-sm">
+              <input type="hidden" name="intent" value="updateRecord" />
+              <input required name="title" value={post.title} placeholder="Title" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white" />
+              <input name="slug" value={post.slug ?? ""} placeholder="Slug" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white" />
+              <input name="category" value={post.category ?? ""} placeholder="Category" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white" />
+              <input name="tags" value={post.tags ?? ""} placeholder="Tags (comma separated)" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white" />
+              <textarea name="summary" rows="3" placeholder="Summary" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white">{post.summary ?? ""}</textarea>
+              <textarea required name="content" rows="14" placeholder="Article body" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white">{post.content}</textarea>
+              <select name="status" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white">
+                {BLOG_POST_STATUSES.map((status) => <option value={status} selected={post.status === status}>{status}</option>)}
+              </select>
+              <textarea name="notes" rows="4" placeholder="Notes" class="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white">{post.notes ?? ""}</textarea>
+              <button class="rounded-lg bg-emerald-400 px-4 py-2 text-sm font-medium text-slate-950">Save draft</button>
+            </form>
+          </AvCard>
+
+          <div class="av-auth-stack-md">
+            <AvCard variant="soft" className="av-auth-stack-sm">
+              <p class="av-kicker">Record state</p>
+              <h2 class="av-card-heading">{post.status}</h2>
+              <p class="av-text-soft">Updated {new Date(post.updatedAt).toLocaleString()}</p>
+              {post.slug ? <p class="text-sm text-slate-300">Slug: {post.slug}</p> : null}
+              {post.tags ? <p class="text-sm text-slate-300">Tags: {post.tags}</p> : null}
+              <div class="flex flex-wrap gap-2">
+                <form method="POST">
+                  <input type="hidden" name="intent" value="toggleFavorite" />
+                  <button class="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-200">{post.isFavorite ? "Unfavorite" : "Favorite"}</button>
+                </form>
+                {!post.isArchived ? (
+                  <form method="POST">
+                    <input type="hidden" name="intent" value="archive" />
+                    <button class="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-200">Archive</button>
+                  </form>
+                ) : (
+                  <form method="POST">
+                    <input type="hidden" name="intent" value="restore" />
+                    <button class="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-200">Restore</button>
+                  </form>
+                )}
+              </div>
+            </AvCard>
+
+            <AvCard variant="soft" className="av-auth-stack-sm">
+              <p class="av-kicker">Draft summary</p>
+              <h2 class="av-card-heading">{post.summary ?? "No summary saved yet"}</h2>
+              <p class="av-text-soft">
+                {post.content.length > 320 ? `${post.content.slice(0, 320)}…` : post.content}
+              </p>
+            </AvCard>
+          </div>
+        </section>
+      </div>
+    </AvContainer>
+  </main>
+</AppShell>
