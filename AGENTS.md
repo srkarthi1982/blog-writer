@@ -25,6 +25,7 @@ MANDATORY: After completing each task, update this repo’s AGENTS.md Task Log (
 - Review this repo's existing AGENTS.md Task Log history before making changes.
 
 ## Task Log (Recent)
+- 2026-04-09 Locked `docs/app-spec.md` for Blog Writer V1 using the new one-app-at-a-time spec-first process: defined the protected DB-backed personal drafting scope, route model, `BlogPosts` data model, validation rules, search/filter behavior, out-of-scope boundaries, and freeze tester guidance without changing runtime or schema code.
 - 2026-03-23 Wave 1 cleanup patch: removed residual starter wording from homepage and protected-route copy, corrected app identity leftovers including `notifyParent` appKey wiring, refreshed shared repo notes, and validated with npm install, npm run typecheck, npm run build.
 - Keep newest first; include date and short summary.
 - 2026-02-09 Added repo-level AGENTS.md enforcement contract (workspace reference + mandatory task-log update rule).
